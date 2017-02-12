@@ -4,10 +4,6 @@ namespace M2Max\ImpRouter;
 
 class ImpRouter
 {
-    /**
-     * @var string
-     */
-    private $root_directory;
 
     /**
      * @var Config
@@ -15,52 +11,49 @@ class ImpRouter
     private $config;
 
     /**
-     * @var string
+     * @var Route
      */
     private $route;
 
+    /**
+     * @var \stdClass
+     */
     private $instance;
 
+    /**
+     * ImpRouter constructor.
+     * @param $config_file_path
+     */
     public function __construct($config_file_path) {
-        $this->root_directory = dirname($_SERVER['SCRIPT_FILENAME']);
-        $this->config = new Config(file_get_contents($this->root_directory.'/'.$config_file_path));
+        $this->config = new Config(file_get_contents(dirname($_SERVER['SCRIPT_FILENAME']).'/'.$config_file_path), true);
 
-        $this->loadConfig();
+        $this->route = $this->config->getCurrentRoute($_SERVER['PATH_INFO']);
 
         $this->load();
 
         $this->checkActionExists();
 
-        call_user_func_array([$this->instance, $this->config->getAction($this->route)], []);
+        call_user_func_array([$this->instance, $this->route->getAction($this->route)], $this->route->getValueParameters());
     }
 
-    private function loadConfig() {
-
-        if(!is_dir($this->root_directory.$this->config->getAlternativeRootDirectory())) {
-            throw new \Exception('Root directory is not a directory');
-        }
-
-        $this->root_directory .= $this->config->getAlternativeRootDirectory();
-        $this->route = $_SERVER['PATH_INFO'];
-
-        if(!$this->config->isRouteExist($this->route)) {
-            throw new \Exception('This route does not exists ('.$this->route.')');
-        }
-    }
-
+    /**
+     * Check if controller exists
+     * @return null|string
+     * @throws \Exception
+     */
     private function checkControllerExists() {
 
-        if(file_exists($this->root_directory.str_replace('\\', '', $this->config->getNamespace($this->route)).'/'.$this->config->getClass($this->route).'.php')) {
-            return $this->root_directory.str_replace('\\', '', $this->config->getNamespace($this->route)).'/'.$this->config->getClass($this->route).'.php';
+        if(file_exists($this->config->getRootPath().str_replace('\\', '', $this->route->getNamespace($this->route)).'/'.$this->route->getClass($this->route).'.php')) {
+            return $this->config->getRootPath().str_replace('\\', '', $this->route->getNamespace($this->route)).'/'.$this->route->getClass($this->route).'.php';
         }
 
-        if(file_exists($this->root_directory.$this->config->getClass($this->route).'.php')) {
-            return $this->root_directory.$this->config->getClass($this->route).'.php';
+        if(file_exists($this->config->getRootPath().$this->route->getClass($this->route).'.php')) {
+            return $this->config->getRootPath().$this->route->getClass($this->route).'.php';
         }
 
-        $class_path = $this->scanFile($this->root_directory);
+        $class_path = $this->scanFile($this->config->getRootPath());
         if($class_path === null) {
-            throw new \Exception('This file does not exists : '.$this->config->getClass($this->route).'.php');
+            throw new \Exception('This file does not exists : '.$this->route->getClass($this->route).'.php');
         }
 
         if(file_exists($class_path)) {
@@ -92,7 +85,7 @@ class ImpRouter
     private function load() {
         $class_path = $this->checkControllerExists();
         require $class_path;
-        $class_name = $this->config->getNamespace($this->route).$this->config->getClass($this->route);
+        $class_name = $this->route->getNamespace().$this->route->getClass($this->route);
         $this->instance = new $class_name();
     }
 
@@ -102,7 +95,7 @@ class ImpRouter
         $methods = $reflectionClass->getMethods();
         foreach ($methods as $reflectionMethod) {
 
-            if($reflectionMethod->getName() == $this->config->getAction($this->route)) {
+            if($reflectionMethod->getName() == $this->route->getAction($this->route)) {
                 $this->checkMethod($reflectionMethod);
             }
         }

@@ -19,19 +19,34 @@ class Config
      */
     private $root_document;
 
+    /**
+     * @var array
+     */
+    private $routes;
+
+    /**
+     * @var string
+     */
+    private $root_path;
+
+    /**
+     * Config constructor.
+     * @param $json
+     */
     public function __construct($json) {
         $this->root_document = json_decode($json, true);
 
         $this->checkConfigFile();
 
         foreach ($this->root_document['route'] as $route => $route_data) {
-            if(strpos($route_data[self::$NAME_KEY_CONTROLLER], '\\') !== false) {
-                $this->root_document['route'][$route]['class'] = substr($route_data[self::$NAME_KEY_CONTROLLER], strrpos($route_data[self::$NAME_KEY_CONTROLLER], '\\')+1);
-                $this->root_document['route'][$route]['namespace'] = substr($route_data[self::$NAME_KEY_CONTROLLER], 0, strrpos($route_data[self::$NAME_KEY_CONTROLLER], '\\')+1);
-            }
+            $this->routes[] = new Route($route, $route_data);
         }
     }
 
+    /**
+     * Check if config file is according to standard
+     * @throws \Exception
+     */
     private function checkConfigFile() {
         if(!array_key_exists('route', $this->root_document)) {
             throw new \Exception('You should add "route" key in config file');
@@ -50,51 +65,55 @@ class Config
                 throw new \Exception('There is no namespace in route : '.$route);
             }
         }
-    }
 
-    public function isRouteExist($route) {
-        return array_key_exists($route, $this->root_document['route']);
-    }
-
-    public function getAlternativeRootDirectory() {
         if(array_key_exists('root', $this->root_document))
-            return $this->root_document['root'];
+            $this->root_path = dirname($_SERVER['SCRIPT_FILENAME']).$this->root_document['root'];
         else
-            return '/';
+            $this->root_path = dirname($_SERVER['SCRIPT_FILENAME']);
+
+        if(!is_dir($this->root_path)) {
+            throw new \Exception('Root directory is not a directory');
+        }
     }
 
-    public function getNamespace($route) {
-        return $this->root_document['route'][$route]['namespace'];
-    }
-
-    public function getClass($route) {
-        return $this->root_document['route'][$route]['class'];
-    }
-
-    public function getController($route) {
-        $this->isRouteExists($route);
-
-        if(!array_key_exists(self::$NAME_KEY_CONTROLLER, $this->root_document['route'][$route])) {
-            throw new \Exception('Controller does not exists in config file');
+    /**
+     * Return current Route object
+     * @param string $route
+     * @return Route
+     * @throws \Exception
+     */
+    public function getCurrentRoute($route) {
+        foreach ($this->routes as $Route) {
+            if($Route->isMatching($route)) {
+                return $Route;
+            }
         }
 
-        return $this->root_document['route'][$route][self::$NAME_KEY_CONTROLLER];
+        throw new \Exception('There is no route for '.$route);
     }
 
-    public function getAction($route) {
+    /**
+     * Test if route exist in config file
+     * @param string $route
+     * @return bool
+     */
+    public function isRouteExists($route) {
 
-        $this->isRouteExists($route);
-
-        if(!array_key_exists(self::$NAME_KEY_ACTION, $this->root_document['route'][$route])) {
-            throw new \Exception('Controller does not exists in config file');
+        foreach ($this->routes as $Route) {
+            if($Route->isMatching($route))
+                return true;
+            else
+                echo $Route->getController().'<br>';
         }
 
-        return $this->root_document['route'][$route][self::$NAME_KEY_ACTION];
+        return false;
     }
 
-    private function isRouteExists($route) {
-        if(!array_key_exists($route, $this->root_document['route'])) {
-            throw new \Exception('Route does not exists in config file');
-        }
+    /**
+     * @return string
+     */
+    public function getRootPath()
+    {
+        return $this->root_path;
     }
 }
