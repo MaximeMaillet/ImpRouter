@@ -56,17 +56,16 @@ class Route
      * @param $route
      * @param $data
      */
-    public function __construct($route, $data) {
+    public function __construct($route, $method, $data) {
 
         $this->name = $route;
-        $this->method = $data['method'];
-        $this->controller = $data[Config::$NAME_KEY_CONTROLLER];
-        $this->action = $data[Config::$NAME_KEY_ACTION];
+        $this->method = $method;
 
-        if(strpos($data[Config::$NAME_KEY_CONTROLLER], '\\') !== false) {
-            $this->class = substr($data[Config::$NAME_KEY_CONTROLLER], strrpos($data[Config::$NAME_KEY_CONTROLLER], '\\')+1);
-            $this->namespace = substr($data[Config::$NAME_KEY_CONTROLLER], 0, strrpos($data[Config::$NAME_KEY_CONTROLLER], '\\')+1);
-        }
+        $ar_data = explode('::', $data['target']);
+        $this->controller = $ar_data[0];
+        $this->action = $ar_data[1];
+        $this->class = substr($ar_data[0], strrpos($ar_data[0], '\\')+1);
+        $this->namespace = substr($ar_data[0], 0, strrpos($ar_data[0], '\\')+1);
 
         if(strpos($route, '{') !== false) {
             preg_match_all("/{(.*?)}/", $route, $matches);
@@ -81,6 +80,10 @@ class Route
      * @return bool
      */
     public function isMatching($route) {
+
+        if(strtolower($this->method) != strtolower($_SERVER['REQUEST_METHOD']))
+            return false;
+
         $array_route_to_match = explode('/', $route);
         $counter = count($array_route_to_match);
 

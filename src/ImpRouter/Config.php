@@ -14,8 +14,11 @@ class Config
     public static $NAME_KEY_CONTROLLER = 'controller';
     public static $NAME_KEY_ACTION = 'action';
     public static $NAME_KEY_METHOD = 'method';
+    public static $NAME_KEY_TARGET = 'target';
 
     public static $ENV = 'dev';
+
+    private static $METHOD_ACCEPTED = ['get'];
 
     /**
      * @var array
@@ -64,20 +67,21 @@ class Config
 
         foreach ($this->root_document['route'] as $route => $route_data) {
 
-            if(!array_key_exists(self::$NAME_KEY_METHOD, $route_data)) {
-                throw new \Exception('There is no "'.self::$NAME_KEY_METHOD.'" in route : '.$route);
-            }
+            foreach ($route_data as $method => $method_data) {
 
-            if(!array_key_exists(self::$NAME_KEY_CONTROLLER, $route_data)) {
-                throw new \Exception('There is no "'.self::$NAME_KEY_CONTROLLER.'" in route : '.$route);
-            }
+                if(!in_array($method, self::$METHOD_ACCEPTED)) {
+                    throw new \Exception('Method is not accepted ('.$method.')');
+                }
 
-            if(!array_key_exists(self::$NAME_KEY_ACTION, $route_data)) {
-                throw new \Exception('There is no "'.self::$NAME_KEY_ACTION.'" in route : '.$route);
-            }
+                if(!array_key_exists(self::$NAME_KEY_TARGET, $method_data)) {
+                    throw new \Exception('There is no "'.self::$NAME_KEY_METHOD.'" in route : '.$route);
+                }
 
-            if(strpos($route_data[self::$NAME_KEY_CONTROLLER], '\\') === false) {
-                throw new \Exception('There is no namespace in route : '.$route);
+                if(substr($method_data[self::$NAME_KEY_TARGET], 0, 1) != '\\') {
+                    throw new \Exception('There is no namespace in route : '.$route);
+                }
+
+                $this->routes[] = new Route($route, $method, $method_data);
             }
         }
 
@@ -140,6 +144,7 @@ class Config
      * @throws \Exception
      */
     public function getCurrentRoute($route) {
+
         if(count($this->routes) > 0) {
             foreach ($this->routes as $Route) {
                 if($Route->isMatching($route)) {
