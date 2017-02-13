@@ -48,10 +48,10 @@ You should set your json files (*route.json*) for add routes.
       "root_path": "/",
       "route": {
       	"/": {
-      		"method": "get",
-      		"controller": "\\Test",
-      		"action": "test"
-      	}
+      	  "get": {
+            "target": "\\TestController::test2"
+          }
+        }
     }
 
 *"root_path":* directory where are your source code
