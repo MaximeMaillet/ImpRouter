@@ -31,6 +31,7 @@ class ImpCli
       self::$ENV = 'vendor';
     }
 
+    echo '[[ install ImpRouter ]]';
     self::install();
   }
 
