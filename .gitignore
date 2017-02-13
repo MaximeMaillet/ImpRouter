@@ -5,3 +5,4 @@ tests/*
 .htaccess
 /index.php
 /route.json
+/composer.phar

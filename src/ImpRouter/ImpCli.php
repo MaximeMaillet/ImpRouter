@@ -8,31 +8,34 @@ class ImpCli
 {
   private static $VENDOR = 'src';
 
-  private static function install() {
-    $root_path = substr(__DIR__, 0, strrpos(__DIR__, self::$VENDOR)+count(self::$VENDOR)-1);
-
-    if(!copy(dirname(__DIR__).'/.htaccess.default', $root_path.'.htaccess')) {
-      throw new \Exception("Unable to copy htaccess file, check write permissions");
-    }
-
-    if(!copy(dirname(__DIR__).'/index.default.php', $root_path.'index.php')) {
-      throw new \Exception("Unable to copy htaccess file, check write permissions");
-    }
-
-    if(!copy(dirname(__DIR__).'/route.default.json', $root_path.'route.json')) {
-      throw new \Exception("Unable to copy htaccess file, check write permissions");
-    }
-  }
-
-  public static function postInstall(Event $event) {
+  public static function install() {
     if(Config::$ENV == 'dev')
       self::$VENDOR  = 'src';
     else {
       self::$ENV = 'vendor';
     }
 
-    echo '[[ install ImpRouter ]]';
-    self::install();
+    echo "\n";
+    echo '[[ Install ImpRouter ]]';
+    $root_path = substr(__DIR__, 0, strrpos(__DIR__, self::$VENDOR)+count(self::$VENDOR)-1);
+
+    echo "\n";
+    echo ' --> Initialize .htaccess';
+    if(!copy(dirname(__DIR__).'/.htaccess.default', $root_path.'.htaccess')) {
+      throw new \Exception("Unable to copy htaccess file, check write permissions");
+    }
+
+    echo "\n";
+    echo ' --> Initialize index.php';
+    if(!copy(dirname(__DIR__).'/index.default.php', $root_path.'index.php')) {
+      throw new \Exception("Unable to copy htaccess file, check write permissions");
+    }
+
+    echo "\n";
+    echo ' --> Initialize route.json';
+    if(!copy(dirname(__DIR__).'/route.default.json', $root_path.'route.json')) {
+      throw new \Exception("Unable to copy htaccess file, check write permissions");
+    }
   }
 
   public static function example() {
