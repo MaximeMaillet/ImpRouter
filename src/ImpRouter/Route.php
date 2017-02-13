@@ -39,7 +39,7 @@ class Route
     /**
      * @var array|null
      */
-    private $value_parameters = null;
+    private $value_parameters = [];
 
     /**
      * @var string

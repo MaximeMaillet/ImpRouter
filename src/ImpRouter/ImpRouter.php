@@ -27,7 +27,10 @@ class ImpRouter
     public function __construct($config_file_path) {
         $this->config = new Config(file_get_contents(dirname($_SERVER['SCRIPT_FILENAME']).'/'.$config_file_path), true);
 
-        $this->route = $this->config->getCurrentRoute($_SERVER['PATH_INFO']);
+        if(isset($_SERVER['PATH_INFO']))
+          $this->route = $this->config->getCurrentRoute($_SERVER['PATH_INFO']);
+        else
+          $this->route = $this->config->getCurrentRoute('/');
 
         $this->load();
 
@@ -74,7 +77,7 @@ class ImpRouter
                 return $this->scanFile($path.$file.'/');
             }
 
-            if($file == $this->config->getClass($this->route).'.php') {
+            if($file == $this->route->getClass($this->route).'.php') {
                 return $path.$file;
             }
         }
