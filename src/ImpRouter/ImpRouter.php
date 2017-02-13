@@ -4,7 +4,6 @@ namespace M2Max\ImpRouter;
 
 class ImpRouter
 {
-
     /**
      * @var Config
      */
@@ -27,8 +26,8 @@ class ImpRouter
     public function __construct($config_file_path) {
         $this->config = new Config(file_get_contents(dirname($_SERVER['SCRIPT_FILENAME']).'/'.$config_file_path), true);
 
-        if(isset($_SERVER['PATH_INFO']))
-          $this->route = $this->config->getCurrentRoute($_SERVER['PATH_INFO']);
+        if(isset($_SERVER['REQUEST_URI']))
+          $this->route = $this->config->getCurrentRoute(substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], $this->config->getRootUrl())+strlen($this->config->getRootUrl())));
         else
           $this->route = $this->config->getCurrentRoute('/');
 
@@ -54,7 +53,7 @@ class ImpRouter
             return $this->config->getRootPath().$this->route->getClass($this->route).'.php';
         }
 
-        $class_path = $this->scanFile($this->config->getRootPath());
+        $class_path = $this->scanFile($this->config->getRootPath().'/');
         if($class_path === null) {
             throw new \Exception('This file does not exists : '.$this->route->getClass($this->route).'.php');
         }
@@ -67,11 +66,12 @@ class ImpRouter
     }
 
     private function scanFile($path) {
+        $file_excludes = ['.', '..', '.git'];
         $array_files = scandir($path);
         foreach ($array_files as $file) {
 
-            if($file == '.' || $file == '..')
-                continue;
+          if(in_array($file, $file_excludes))
+              continue;
 
             if(is_dir($file)) {
                 return $this->scanFile($path.$file.'/');
@@ -100,8 +100,11 @@ class ImpRouter
 
             if($reflectionMethod->getName() == $this->route->getAction($this->route)) {
                 $this->checkMethod($reflectionMethod);
+                return true;
             }
         }
+
+        throw new \Exception('This route has no action ('.$this->route->getAction($this->route).')');
     }
 
     private function checkMethod(\ReflectionMethod $method) {

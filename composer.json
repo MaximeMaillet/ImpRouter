@@ -15,5 +15,8 @@
     },
     "autoload": {
       "psr-4" : {"M2Max\\" : "src"}
+    },
+    "scripts": {
+      "post-install-cmd": "M2Max\\ImpRouter\\ImpCli::postInstall"
     }
 }

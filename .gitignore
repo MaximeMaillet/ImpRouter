@@ -2,3 +2,6 @@
 composer.lock
 tests/*
 .idea/*
+.htaccess
+/index.php
+/route.json

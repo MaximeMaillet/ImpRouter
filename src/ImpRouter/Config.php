@@ -13,6 +13,9 @@ class Config
 {
     public static $NAME_KEY_CONTROLLER = 'controller';
     public static $NAME_KEY_ACTION = 'action';
+    public static $NAME_KEY_METHOD = 'method';
+
+    public static $ENV = 'dev';
 
     /**
      * @var array
@@ -28,6 +31,11 @@ class Config
      * @var string
      */
     private $root_path;
+
+    /**
+    * @var string
+    */
+    private $root_url;
 
     /**
      * Config constructor.
@@ -48,11 +56,17 @@ class Config
      * @throws \Exception
      */
     private function checkConfigFile() {
+        $this->checkJsonError();
+
         if(!array_key_exists('route', $this->root_document)) {
             throw new \Exception('You should add "route" key in config file');
         }
 
         foreach ($this->root_document['route'] as $route => $route_data) {
+            if(!array_key_exists(self::$NAME_KEY_METHOD, $route_data)) {
+                throw new \Exception('There is no "'.self::$NAME_KEY_METHOD.'" in route : '.$route);
+            }
+
             if(!array_key_exists(self::$NAME_KEY_CONTROLLER, $route_data)) {
                 throw new \Exception('There is no "'.self::$NAME_KEY_CONTROLLER.'" in route : '.$route);
             }
@@ -66,14 +80,56 @@ class Config
             }
         }
 
-        if(array_key_exists('root', $this->root_document))
-            $this->root_path = dirname($_SERVER['SCRIPT_FILENAME']).$this->root_document['root'];
+        if(array_key_exists('root_path', $this->root_document))
+            $this->root_path = dirname($_SERVER['SCRIPT_FILENAME']).'/'.$this->root_document['root_path'];
         else
-            $this->root_path = dirname($_SERVER['SCRIPT_FILENAME']);
+            $this->root_path = dirname($_SERVER['SCRIPT_FILENAME']).'/';
+
+        $this->root_url = dirname($_SERVER['SCRIPT_NAME']);
 
         if(!is_dir($this->root_path)) {
             throw new \Exception('Root directory is not a directory');
         }
+    }
+
+    private function checkJsonError() {
+      switch (json_last_error()) {
+        case JSON_ERROR_NONE:
+          return true;
+          break;
+        case JSON_ERROR_DEPTH:
+            throw new \Exception("JSON_ERROR_DEPTH :: The maximum stack depth has been exceeded");
+            break;
+        case JSON_ERROR_STATE_MISMATCH:
+            throw new \Exception("JSON_ERROR_STATE_MISMATCH :: Invalid or malformed JSON");
+            break;
+        case JSON_ERROR_CTRL_CHAR:
+            throw new \Exception("JSON_ERROR_CTRL_CHAR :: Control character error, possibly incorrectly encoded");
+            break;
+        case JSON_ERROR_SYNTAX:
+            throw new \Exception("JSON_ERROR_SYNTAX :: Syntax error");
+            break;
+        case JSON_ERROR_UTF8:
+            throw new \Exception("JSON_ERROR_UTF8 :: Malformed UTF-8 characters, possibly incorrectly encoded");
+            break;
+        case JSON_ERROR_RECURSION:
+            throw new \Exception("JSON_ERROR_RECURSION :: One or more recursive references in the value to be encoded");
+            break;
+        case JSON_ERROR_INF_OR_NAN:
+            throw new \Exception("JSON_ERROR_INF_OR_NAN :: One or more NAN or INF values in the value to be encoded");
+            break;
+        case JSON_ERROR_UNSUPPORTED_TYPE:
+            throw new \Exception("JSON_ERROR_UNSUPPORTED_TYPE :: A value of a type that cannot be encoded was given");
+            break;
+        case JSON_ERROR_INVALID_PROPERTY_NAME:
+            throw new \Exception("JSON_ERROR_INVALID_PROPERTY_NAME :: A property name that cannot be encoded was given");
+            break;
+        case JSON_ERROR_UTF16:
+            throw new \Exception("JSON_ERROR_UTF16 :: Malformed UTF-16 characters, possibly incorrectly encoded");
+            break;
+        default:
+            throw new \Exception("JSON_ERROR : Unknown error");
+      }
     }
 
     /**
@@ -83,9 +139,11 @@ class Config
      * @throws \Exception
      */
     public function getCurrentRoute($route) {
-        foreach ($this->routes as $Route) {
-            if($Route->isMatching($route)) {
-                return $Route;
+        if(count($this->routes) > 0) {
+            foreach ($this->routes as $Route) {
+                if($Route->isMatching($route)) {
+                    return $Route;
+                }
             }
         }
 
@@ -116,4 +174,13 @@ class Config
     {
         return $this->root_path;
     }
+
+    /**
+     * @return string
+     */
+    public function getRootUrl()
+    {
+        return $this->root_url;
+    }
+
 }
