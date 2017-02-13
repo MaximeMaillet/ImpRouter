@@ -89,6 +89,16 @@ class ImpRouter
         $class_path = $this->checkControllerExists();
         require $class_path;
         $class_name = $this->route->getNamespace().$this->route->getClass($this->route);
+
+        if(!class_exists($class_name)) {
+            throw new \Exception('This class does not defined ('.$class_name.')');
+        }
+
+        $reflectionClass = new \ReflectionClass($class_name);
+        if($reflectionClass->getConstructor() == null || $reflectionClass->getConstructor()->getName() !== '__construct') {
+          throw new \Exception('This class has no constructor ('.$class_name.')');
+        }
+
         $this->instance = new $class_name();
     }
 

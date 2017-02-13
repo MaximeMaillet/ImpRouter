@@ -6,14 +6,11 @@ use Composer\Script\Event;
 
 class ImpCli
 {
-  private static $VENDOR = 'src';
+  private static $VENDOR = 'vendor';
 
-  public static function install() {
-    if(Config::$ENV == 'dev')
-      self::$VENDOR  = 'src';
-    else {
-      self::$ENV = 'vendor';
-    }
+  public static function install(Event $event) {
+    if(count($event->getArguments()) > 0 && $event->getArguments()[0] == 'dev')
+      self::$VENDOR = 'src';
 
     echo "\n";
     echo '[[ Install ImpRouter ]]';
@@ -39,6 +36,9 @@ class ImpCli
   }
 
   public static function example() {
+    if(count($event->getArguments()) > 0 && $event->getArguments()[0] == 'dev')
+      self::$VENDOR = 'src';
+
     $root_path = substr(__DIR__, 0, strrpos(__DIR__, self::$VENDOR)+count(self::$VENDOR)-1);
 
     if(!file_exists($root_path.'app') && !mkdir($root_path.'app')) {
@@ -60,6 +60,14 @@ class ImpCli
   }
 
   public static function reset(Event $event) {
+    $noInstall = false;
+    if(count($event->getArguments()) > 0) {
+      if($event->getArguments()[0] == 'dev' || (isset($event->getArguments()[1]) && $event->getArguments()[1] == 'dev'))
+        self::$VENDOR = 'src';
+      else if($event->getArguments()[0] == 'noinstall' || (isset($event->getArguments()[1]) && $event->getArguments()[1] == 'noinstall'))
+        $noInstall = true;
+    }
+
     $root_path = substr(__DIR__, 0, strrpos(__DIR__, self::$VENDOR)+count(self::$VENDOR)-1);
 
     if(file_exists($root_path.'route.json') && !unlink($root_path.'route.json')) {
@@ -80,7 +88,7 @@ class ImpCli
       }
     }
 
-    if(count($event->getArguments()) > 0 && $event->getArguments()[0] == 'noinstall')
+    if($noInstall)
       return;
 
     self::install();
