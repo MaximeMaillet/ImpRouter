@@ -9,7 +9,7 @@
             "email": "maxime.maillet93@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "alpha",
     "require": {
       "php": ">=5.3.0"
     },
