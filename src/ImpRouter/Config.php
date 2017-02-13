@@ -63,6 +63,7 @@ class Config
         }
 
         foreach ($this->root_document['route'] as $route => $route_data) {
+
             if(!array_key_exists(self::$NAME_KEY_METHOD, $route_data)) {
                 throw new \Exception('There is no "'.self::$NAME_KEY_METHOD.'" in route : '.$route);
             }

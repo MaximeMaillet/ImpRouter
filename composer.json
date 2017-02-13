@@ -17,6 +17,8 @@
       "psr-4" : {"M2Max\\" : "src"}
     },
     "scripts": {
-      "post-install-cmd": "M2Max\\ImpRouter\\ImpCli::postInstall"
+      "post-install-cmd": "M2Max\\ImpRouter\\ImpCli::postInstall",
+      "improuter:example": "M2Max\\ImpRouter\\ImpCli::example",
+      "improuter:reset": "M2Max\\ImpRouter\\ImpCli::reset"
     }
 }
