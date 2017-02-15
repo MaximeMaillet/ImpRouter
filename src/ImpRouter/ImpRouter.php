@@ -73,7 +73,7 @@ class ImpRouter
           if(in_array($file, $file_excludes))
               continue;
 
-            if(is_dir($file)) {
+            if(is_dir($path.$file)) {
                 return $this->scanFile($path.$file.'/');
             }
 
