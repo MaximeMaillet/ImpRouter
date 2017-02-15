@@ -35,7 +35,7 @@ class ImpCli
     }
   }
 
-  public static function example() {
+  public static function example(Event $event) {
     if(count($event->getArguments()) > 0 && $event->getArguments()[0] == 'dev')
       self::$VENDOR = 'src';
 
@@ -51,10 +51,8 @@ class ImpCli
 
     $json = json_decode(file_get_contents($root_path.'route.json'), true);
     $json['root_path'] = '/app';
-    $json['route']["/example"] = [
-      "controller" => "\\MyDefaultNamespace\\DefaultController",
-      "action" => "index",
-      "method" => "get"
+    $json['route']["/example"]["get"] = [
+      "target" => "\\MyDefaultNamespace\\DefaultController::index"
     ];
     file_put_contents($root_path.'route.json', json_encode($json));
   }
