@@ -48,10 +48,6 @@ class Config
         $this->root_document = json_decode($json, true);
 
         $this->checkConfigFile();
-
-        foreach ($this->root_document['route'] as $route => $route_data) {
-            $this->routes[] = new Route($route, $route_data);
-        }
     }
 
     /**
