@@ -5,6 +5,7 @@ namespace M2Max\ImpRouter;
 class ImpRouter
 {
     private static $ownInstance = null;
+    private static $ENV;
 
     /**
      * @var Config
@@ -35,6 +36,14 @@ class ImpRouter
 
     public static function rootURL() {
         return self::$ownInstance->config->getRootURL();
+    }
+
+    public static function setEnv($env) {
+        self::$ENV = $env;
+    }
+
+    public static function ENVIRONMENT() {
+        return self::$ENV;
     }
 
     /**
