@@ -8,7 +8,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 try {
-  new ImpRouter('route.json');
+  ImpRouter::init('route.json');
 }
 catch(Exception $e) {
   echo 'Error :: '.$e->getMessage();
