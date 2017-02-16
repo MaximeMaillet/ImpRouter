@@ -4,6 +4,8 @@ namespace M2Max\ImpRouter;
 
 class ImpRouter
 {
+    private static $ownInstance = null;
+
     /**
      * @var Config
      */
@@ -19,6 +21,22 @@ class ImpRouter
      */
     private $instance;
 
+    public static function init($config_file_path) {
+        if(self::$ownInstance == null)
+            self::$ownInstance = new ImpRouter($config_file_path);
+
+        self::$ownInstance->loadAll();
+        return self::$ownInstance;
+    }
+
+    public static function rootPath() {
+        return self::$ownInstance->config->getRootPath();
+    }
+
+    public static function rootURL() {
+        return self::$ownInstance->config->getRootURL();
+    }
+
     /**
      * ImpRouter constructor.
      * @param $config_file_path
@@ -30,6 +48,9 @@ class ImpRouter
           $this->route = $this->config->getCurrentRoute(substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], $this->config->getRootUrl())+strlen($this->config->getRootUrl())));
         else
           $this->route = $this->config->getCurrentRoute('/');
+    }
+
+    private function loadAll() {
 
         $this->load();
 
