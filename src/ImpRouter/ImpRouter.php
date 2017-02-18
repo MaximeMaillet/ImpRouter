@@ -54,12 +54,23 @@ class ImpRouter
         $this->config = new Config(file_get_contents(dirname($_SERVER['SCRIPT_FILENAME']).'/'.$config_file_path), true);
 
         if(isset($_SERVER['REQUEST_URI']))
-          $this->route = $this->config->getCurrentRoute(substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], $this->config->getRootUrl())+strlen($this->config->getRootUrl())));
+            $this->route = $this->config->getCurrentRoute(substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], $this->config->getRootUrl())+strlen($this->config->getRootUrl())));
         else
-          $this->route = $this->config->getCurrentRoute('/');
+            $this->route = $this->config->getCurrentRoute('/');
     }
 
     private function loadAll() {
+
+        if($this->route === null) {
+            $route = substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], $this->config->getRootUrl())+strlen($this->config->getRootUrl()));
+            $file = dirname($_SERVER['SCRIPT_FILENAME']).substr($route, 0, strpos($route, '?'));
+            if(file_exists($file))
+                echo file_get_contents($file);
+            else {
+                http_response_code(404);
+            }
+            return;
+        }
 
         $this->load();
 
@@ -100,8 +111,8 @@ class ImpRouter
         $array_files = scandir($path);
         foreach ($array_files as $file) {
 
-          if(in_array($file, $file_excludes))
-              continue;
+            if(in_array($file, $file_excludes))
+                continue;
 
             if(is_dir($path.$file)) {
                 return $this->scanFile($path.$file.'/');
@@ -126,7 +137,7 @@ class ImpRouter
 
         $reflectionClass = new \ReflectionClass($class_name);
         if($reflectionClass->getConstructor() == null || $reflectionClass->getConstructor()->getName() !== '__construct') {
-          throw new \Exception('This class has no constructor ('.$class_name.')');
+            throw new \Exception('This class has no constructor ('.$class_name.')');
         }
 
         $this->instance = new $class_name();
@@ -152,4 +163,4 @@ class ImpRouter
             throw new \Exception('This method is not public ('.$method->getName().')');
         }
     }
- }
+}

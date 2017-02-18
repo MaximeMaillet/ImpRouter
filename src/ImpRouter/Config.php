@@ -36,9 +36,14 @@ class Config
     private $root_path;
 
     /**
-    * @var string
-    */
+     * @var string
+     */
     private $root_url;
+
+    /**
+     * @var array
+     */
+    private $array_exclude_extensions = null;
 
     /**
      * Config constructor.
@@ -56,6 +61,10 @@ class Config
      */
     private function checkConfigFile() {
         $this->checkJsonError();
+
+        if(array_key_exists('exclude_extensions', $this->root_document)) {
+            $this->array_exclude_extensions = $this->root_document['exclude_extensions'];
+        }
 
         if(!array_key_exists('route', $this->root_document)) {
             throw new \Exception('You should add "route" key in config file');
@@ -94,43 +103,43 @@ class Config
     }
 
     private function checkJsonError() {
-      switch (json_last_error()) {
-        case JSON_ERROR_NONE:
-          return true;
-          break;
-        case JSON_ERROR_DEPTH:
-            throw new \Exception("JSON_ERROR_DEPTH :: The maximum stack depth has been exceeded");
-            break;
-        case JSON_ERROR_STATE_MISMATCH:
-            throw new \Exception("JSON_ERROR_STATE_MISMATCH :: Invalid or malformed JSON");
-            break;
-        case JSON_ERROR_CTRL_CHAR:
-            throw new \Exception("JSON_ERROR_CTRL_CHAR :: Control character error, possibly incorrectly encoded");
-            break;
-        case JSON_ERROR_SYNTAX:
-            throw new \Exception("JSON_ERROR_SYNTAX :: Syntax error");
-            break;
-        case JSON_ERROR_UTF8:
-            throw new \Exception("JSON_ERROR_UTF8 :: Malformed UTF-8 characters, possibly incorrectly encoded");
-            break;
-        case JSON_ERROR_RECURSION:
-            throw new \Exception("JSON_ERROR_RECURSION :: One or more recursive references in the value to be encoded");
-            break;
-        case JSON_ERROR_INF_OR_NAN:
-            throw new \Exception("JSON_ERROR_INF_OR_NAN :: One or more NAN or INF values in the value to be encoded");
-            break;
-        case JSON_ERROR_UNSUPPORTED_TYPE:
-            throw new \Exception("JSON_ERROR_UNSUPPORTED_TYPE :: A value of a type that cannot be encoded was given");
-            break;
-        case JSON_ERROR_INVALID_PROPERTY_NAME:
-            throw new \Exception("JSON_ERROR_INVALID_PROPERTY_NAME :: A property name that cannot be encoded was given");
-            break;
-        case JSON_ERROR_UTF16:
-            throw new \Exception("JSON_ERROR_UTF16 :: Malformed UTF-16 characters, possibly incorrectly encoded");
-            break;
-        default:
-            throw new \Exception("JSON_ERROR : Unknown error");
-      }
+        switch (json_last_error()) {
+            case JSON_ERROR_NONE:
+                return true;
+                break;
+            case JSON_ERROR_DEPTH:
+                throw new \Exception("JSON_ERROR_DEPTH :: The maximum stack depth has been exceeded");
+                break;
+            case JSON_ERROR_STATE_MISMATCH:
+                throw new \Exception("JSON_ERROR_STATE_MISMATCH :: Invalid or malformed JSON");
+                break;
+            case JSON_ERROR_CTRL_CHAR:
+                throw new \Exception("JSON_ERROR_CTRL_CHAR :: Control character error, possibly incorrectly encoded");
+                break;
+            case JSON_ERROR_SYNTAX:
+                throw new \Exception("JSON_ERROR_SYNTAX :: Syntax error");
+                break;
+            case JSON_ERROR_UTF8:
+                throw new \Exception("JSON_ERROR_UTF8 :: Malformed UTF-8 characters, possibly incorrectly encoded");
+                break;
+            case JSON_ERROR_RECURSION:
+                throw new \Exception("JSON_ERROR_RECURSION :: One or more recursive references in the value to be encoded");
+                break;
+            case JSON_ERROR_INF_OR_NAN:
+                throw new \Exception("JSON_ERROR_INF_OR_NAN :: One or more NAN or INF values in the value to be encoded");
+                break;
+            case JSON_ERROR_UNSUPPORTED_TYPE:
+                throw new \Exception("JSON_ERROR_UNSUPPORTED_TYPE :: A value of a type that cannot be encoded was given");
+                break;
+            case JSON_ERROR_INVALID_PROPERTY_NAME:
+                throw new \Exception("JSON_ERROR_INVALID_PROPERTY_NAME :: A property name that cannot be encoded was given");
+                break;
+            case JSON_ERROR_UTF16:
+                throw new \Exception("JSON_ERROR_UTF16 :: Malformed UTF-16 characters, possibly incorrectly encoded");
+                break;
+            default:
+                throw new \Exception("JSON_ERROR : Unknown error");
+        }
     }
 
     /**
@@ -147,6 +156,11 @@ class Config
                     return $Route;
                 }
             }
+        }
+
+        $extension = explode('?', substr($route, strrpos($route, '.')+1))[0];
+        if(in_array(strtolower($extension), $this->array_exclude_extensions)) {
+            return null;
         }
 
         throw new \Exception('There is no route for '.$route);
